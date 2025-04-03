@@ -49,6 +49,9 @@ var configSection = builder.Configuration.GetRequiredSection(BaseUrlConfiguratio
 builder.Services.Configure<BaseUrlConfiguration>(configSection);
 var baseUrlConfig = configSection.Get<BaseUrlConfiguration>();
 
+builder.Services.AddApplicationInsightsTelemetry();
+
+
 builder.Services.AddMemoryCache();
 
 var key = Encoding.ASCII.GetBytes(AuthorizationConstants.JWT_SECRET_KEY);
@@ -162,6 +165,7 @@ app.UseCors(CORS_POLICY);
 
 app.UseAuthorization();
 
+throw new Exception("Cannot move further");
 // Enable middleware to serve generated Swagger as a JSON endpoint.
 app.UseSwagger();
 
@@ -177,5 +181,6 @@ app.MapEndpoints();
 
 app.Logger.LogInformation("LAUNCHING PublicApi");
 app.Run();
+
 
 public partial class Program { }
