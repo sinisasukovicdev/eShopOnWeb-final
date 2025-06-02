@@ -24,7 +24,7 @@ public class CatalogTypeListEndpoint : IEndpoint<IResult, IRepository<CatalogTyp
 
     public void AddRoute(IEndpointRouteBuilder app)
     {
-        app.MapGet("api/catalog-types",
+        app.MapGet("api/catalog-types8",
             async (IRepository<CatalogType> catalogTypeRepository) =>
             {
                 return await HandleAsync(catalogTypeRepository);

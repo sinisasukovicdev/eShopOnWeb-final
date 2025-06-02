@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.eShopWeb.ApplicationCore.Interfaces;
 using Microsoft.eShopWeb.Infrastructure.Data;
 using Microsoft.eShopWeb.Infrastructure.Identity;
+using Microsoft.eShopWeb.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -26,15 +28,20 @@ public static class Dependencies
         }
         else
         {
+            var catalogDbConnectionString = configuration["CatalogConnection"];
+            var identityDbConnectionString = configuration["IdentityConnection"];
+
             // use real database
             // Requires LocalDB which can be installed with SQL Server Express 2016
             // https://www.microsoft.com/en-us/download/details.aspx?id=54284
             services.AddDbContext<CatalogContext>(c =>
-                c.UseSqlServer(configuration.GetConnectionString("CatalogConnection")));
+                c.UseSqlServer(catalogDbConnectionString));
 
             // Add Identity DbContext
             services.AddDbContext<AppIdentityDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("IdentityConnection")));
+                options.UseSqlServer(identityDbConnectionString));
         }
+        services.AddTransient<IOrderItemsReserver, OrderItemsReserver>();
+        services.AddTransient<IDeliveryOrderProcessor, DeliveryOrderProcessor>();
     }
 }

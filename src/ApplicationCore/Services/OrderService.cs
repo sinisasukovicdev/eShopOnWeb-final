@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Ardalis.GuardClauses;
+using Azure.Messaging.ServiceBus;
 using Microsoft.eShopWeb.ApplicationCore.Entities;
 using Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate;
 using Microsoft.eShopWeb.ApplicationCore.Entities.OrderAggregate;
@@ -21,16 +22,22 @@ public class OrderService : IOrderService
     private readonly IUriComposer _uriComposer;
     private readonly IRepository<Basket> _basketRepository;
     private readonly IRepository<CatalogItem> _itemRepository;
+    private readonly IOrderItemsReserver _orderItemsReserver;
+    private readonly IDeliveryOrderProcessor _deliveryOrderProcessor;
 
     public OrderService(IRepository<Basket> basketRepository,
         IRepository<CatalogItem> itemRepository,
         IRepository<Order> orderRepository,
+        IOrderItemsReserver orderItemsReserver,
+        IDeliveryOrderProcessor deliveryOrderProcessor,
         IUriComposer uriComposer)
     {
         _orderRepository = orderRepository;
         _uriComposer = uriComposer;
         _basketRepository = basketRepository;
         _itemRepository = itemRepository;
+        _orderItemsReserver = orderItemsReserver;
+        _deliveryOrderProcessor = deliveryOrderProcessor;
     }
 
     public async Task CreateOrderAsync(int basketId, Address shippingAddress)
@@ -56,35 +63,8 @@ public class OrderService : IOrderService
 
         await _orderRepository.AddAsync(order);
 
-        using HttpClient httpClient = new HttpClient();
+        await _orderItemsReserver.Reserve(order);
 
-        try
-        {
-            var url = "https://func-reshoponweb.azurewebsites.net/api/OrderItemsReserver?code=OWu8TKqRHxhwiQgasdKdwHSFIzag_k-yrkERdtspQbJNAzFu3_VpHQ==";
-            // Create the StringContent object to represent the JSON payload
-            var payload = items.Select(x => new { ItemId = x.Id, Quatity = x.Units });
-            StringContent content = new StringContent(payload.ToJson(), Encoding.UTF8, "application/json");
-
-            
-            // Send the POST request
-            HttpResponseMessage response = await httpClient.PostAsync(url, content);
-
-            // Check the status of the response
-            if (response.IsSuccessStatusCode)
-            {
-                // Read the response body
-                string responseBody = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Response: {responseBody}");
-            }
-            else
-            {
-                Console.WriteLine($"Failed: {response.StatusCode}, {response.ReasonPhrase}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error sending POST request: {ex.Message}");
-        }
-
+        await _deliveryOrderProcessor.Process(order);
     }
 }

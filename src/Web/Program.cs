@@ -22,6 +22,10 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.AddConsole();
 
+//Komentarise KEY VAULT temporary
+var keyVaultUri = new Uri("https://kv-eshoponweb.vault.azure.net/");
+builder.Configuration.AddAzureKeyVault(keyVaultUri, new DefaultAzureCredential());
+
 if (builder.Environment.IsDevelopment() || builder.Environment.IsProduction() || builder.Environment.EnvironmentName == "Docker"){
     // Configure SQL Server (local)
     Microsoft.eShopWeb.Infrastructure.Dependencies.ConfigureServices(builder.Configuration, builder.Services);
